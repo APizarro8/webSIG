@@ -1,0 +1,129 @@
+# -*- coding: utf-8 -*-
+###############################################################################################################################
+# Autor: Alicia Pizarro
+########################################################################################################################
+
+#--- Import modules
+import branca
+import geopandas as gp
+from datetime import datetime
+from json import dumps
+import pandas
+import shapefile
+from PIL.ImageColor import colormap
+from branca.colormap import LinearColormap
+from folium.plugins import LocateControl, measure_control, MeasureControl
+import folium as folium
+from folium.plugins import MiniMap
+import warnings
+warnings.filterwarnings('ignore')
+
+
+import time
+star = time.time() #start counting the execution time
+
+x = datetime.now()
+fechaActual = (str(x.day) + '-' + str(x.month) + '-' + str(x.year))
+
+
+def createHTML(activeFire, HS_clip, AOIreproject, outHTML):
+    """
+    This function converts shapefiles into geoJson format.
+    Create and iterative map and represented the shapes.
+    -------------------------------------------------------------------
+    Parameters of function
+    --------------------------------------------------------------------
+    :param resultsMapping: data of final results (actives fires)
+    :param inLayer1: shape file
+    :param outLayer1: Json file
+    :param inLayer2: Json file
+    :param outLayer2: HTML file
+    :param color: #000000
+    :param weight: 1.5
+    :param fillColor: #58b5d1
+    :param fillOpacity: 0.10
+    --------------------------------------------------------------------
+    :return: html file that opens a new windows in the computer's default browser.
+    """
+    #shp1 = geopandas.read_file("%s%s" % (HS_ellipse, ".shp"))
+    #shp2 = geopandas.read_file("%s%s" % (AOIreproject, ".shp"))
+    #shp3 = geopandas.read_file("%s%s" % (HS_clip, ".shp"))
+
+    map = geemap.Map(center=[43.2730, -5.0356],
+                     zoom_start=9,
+                     max_zoom=9,
+                     control_scale=True)
+
+    minimap = MiniMap(toggle_display=True)
+    map.add_child(minimap)
+
+    # Create a legend
+    legend_dict = {
+        'Non-irrigated arable land': 'FFFFA8',
+        'Rice fields': 'E6E600',
+        'Pastures': 'E6E64D',
+        'Annual crops associated with permanent crops': 'FFE6A6',
+        'Complex cultivation patterns': 'FFE64D',
+        'Land principally occupied by agriculture': 'E6CC4D',
+        'Agro-forestry areas': 'F2CCA6',
+        'Broad-leaved forest': '80FF00',
+        'Coniferous forest': '00A600',
+        'Mixed forest': '4DFF00',
+        'Natural grasslands': 'CCF24D',
+        'Moors and heathland': 'A6FF80',
+        'Sclerophyllous vegetation': 'A6E64D',
+        'Transitional woodland-shrub': 'A6F200'
+    }
+
+    landcover = ee.Image("COPERNICUS/CORINE/V20/100m/2018").select('landcover')
+    map.addLayer(landcover, {}, 'Corine LandCover 2018', opacity=0.6)
+    map.add_legend(legend_title="Corine LandCover 2018", legend_dict=legend_dict, position='bottomleft')
+
+    #ee_object = geemap.shp_to_ee(str(activeFire + '.shp'))
+    #map.addLayer(ee_object, {}, 'Active Fires in the AOI', opacity=0.6)
+
+    #map.add_shapefile(ee_object, layer_name="Shapefile")
+
+    #ee_object = geemap.shp_to_ee(shp2)
+    #map.addLayer(ee_object, {}, 'AOI')
+
+    #ee_object = geemap.shp_to_ee(shp3)
+    #map.addLayer(ee_object, {}, 'Hotspots')
+
+    map.addLayerControl()
+
+    measure = MeasureControl(position='bottomleft',
+                             active_color='orange',
+                             primary_length_unit='kilometers')
+
+    map.add_child(measure)
+
+    # Locate Control
+    LocateControl(auto_start=False).add_to(map)  # Enable geolocation button on map.
+    tab_title = """<title>Hotspots</title>"""  # Define webpage title html and add to script.
+    map.get_root().html.add_child(folium.Element(tab_title))
+
+    # title html
+    loc = ('Hotspots in the select AOI at ' + time.strftime("%c"))
+    title_html = '''
+                <h3 align="center" style="font-size:16px"><b>{}</b></h3>
+                '''.format(loc)
+
+    map.get_root().html.add_child(folium.Element(title_html))  # Title
+
+    # save html
+    map.save(outHTML)
+
+    print("\n")
+    print("The base map has been create correctly.")
+    print('-----------------------------------------')
+
+    return map
+
+createHTML()
+
+
+# --- Ejecution time process
+finish = time.time()
+process = finish - star
+print("The program has been slow: ", process, "seconds")
