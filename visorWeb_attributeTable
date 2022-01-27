@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+################################################################################################################################
+# Autor: Alicia Pizarro
+########################################################################################################################
+
+#--- Import modules
+import geopandas as gp
+import matplotlib.pyplot as plt
+import plotly.express as px
+from datetime import datetime
+
+x = datetime.now()
+fechaActual = (str(x.day) + '-' + str(x.month) + '-' + str(x.year))
+
+# input data
+data = gp.GeoDataFrame.from_file('......shp')
+
+# output data
+outputFolder = '/....'
+
+def createHTML2(data):
+    """
+    Create a other cartographic viewer with labels.
+    :param hotspots: input shape
+    :return:
+    """
+    fig = px.scatter_mapbox(data, lat="LATITUDE", lon="LONGITUDE", hover_data=["TRACK", "SCAN"],
+                            color_discrete_sequence=["red"], zoom=5, height=1000)
+
+    fig.update_layout(mapbox_style="open-street-map")
+    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig.show()
+
+    plt.savefig(outputFolder + 'html_labels' + fechaActual)
+    plt.savefig(outputFolder + 'html_labels' + fechaActual)
+
+    return fig
+
+createHTML2(data)
